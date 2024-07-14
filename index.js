@@ -4,7 +4,7 @@ import connectDB from "./src/connection.js";
 import env from "dotenv";
 import helmet from "helmet";
 import cors from "cors";
-// import adminRoute from "./src/routes/adminRoute.js";
+import adminRoute from "./src/routes/adminRoute.js";
 import userRoute from "./src/routes/userRoute.js";
 import interestRoute from './src/routes/interestRoute.js'
 const app = express();
@@ -17,7 +17,7 @@ app.use(helmet());
 app.use(cors());
 
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
-
+app.use("/api/v1/admin",adminRoute);
 app.use("/api/v1/user", userRoute);
 app.use('/api/v1/interest',interestRoute);
 const PORT = process.env.PORT || 8080;

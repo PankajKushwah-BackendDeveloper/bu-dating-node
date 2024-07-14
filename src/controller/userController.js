@@ -147,7 +147,7 @@ export const userLogin = async (req, res) => {
     if (!phone) {
       return res.status(400).json({
         success: false,
-        message: "phone number is required",
+        message: "Phone number is required",
       });
     }
 
@@ -164,11 +164,13 @@ export const userLogin = async (req, res) => {
     });
 
     const { password, ...userData } = user.toObject();
+    const otp=9999;
+   
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user: userData,
+      otp:otp,
       token,
     });
   } catch (error) {
@@ -179,6 +181,7 @@ export const userLogin = async (req, res) => {
     });
   }
 };
+  
 
 export const getUser = async (req, res) => {
   try {
@@ -239,5 +242,43 @@ export const getProfileImage = async (req, res) => {
   } catch (error) {
     console.error("Error downloading file:", error);
     res.status(500).send("Internal Server Error");
+  }
+};
+
+export const verifyOtpController = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number and OTP are required",
+      });
+    }
+
+    const user = await User.findOne({ phone });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    // OTP is valid, so you can clear it or update user's status
+    user.otp = null; // Clear the OTP
+    await user.save(); // Save the changes
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+      user:user
+    });
+  } catch (error) {
+    console.error("Error during OTP verification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

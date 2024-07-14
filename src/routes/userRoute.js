@@ -6,6 +6,7 @@ import {
   getUser,
   userLogin,
   userSignUp,
+  verifyOtpController,
 } from "../controller/userController.js";
 import multer from "multer";
 import generateStorage from "../helper/multerStorage.js";
@@ -21,6 +22,9 @@ router.post("/auth/login", userLogin);
 router.get("/", requireSignIn, getUser);
 router.get('/get-image/:fileName',getProfileImage)
 router.get('/all',requireSignIn,getAllUsers)
+router.post('/verify-otp',verifyOtpController);
+
+
 
 
 export default router;
