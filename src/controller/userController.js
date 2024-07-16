@@ -205,13 +205,15 @@ export const userLogin = async (req, res) => {
         message: "User not found",
       });
     }
+    const otp=9999;
+    user.otp = otp;
+    await user.save()
 
-    const otp = generateCode(5);
-    user.otp = (otp);
-    await user.save();
+
     return res.status(200).json({
       success: true,
-      message: `Your otp is ${otp}`,
+      message: `your otp is ${otp}`,
+     
     });
   } catch (error) {
     console.error("Error during user login:", error);
@@ -221,6 +223,7 @@ export const userLogin = async (req, res) => {
     });
   }
 };
+  
 
 export const getUser = async (req, res) => {
   try {
@@ -283,14 +286,3 @@ export const getProfileImage = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
-
-function generateCode(length) {
-  let otp = '';
-  let characters = '123456789'
-  if(length===5) {
-  }
-  for (let i = 0; i < length; i++) {
-    otp += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return otp;
-}
