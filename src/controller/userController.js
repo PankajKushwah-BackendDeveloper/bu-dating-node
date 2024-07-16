@@ -16,7 +16,10 @@ export const userSignUp = async (req, res) => {
       motive,
       age,
       gender,
-      dob
+      dob,
+      fun,
+      music,
+      sports
     } = req.body;
 
     if(!req.file) return res.status(400).json({
@@ -58,13 +61,16 @@ export const userSignUp = async (req, res) => {
       },
       age,
       gender,
-      dob
+      dob,
+      fun,
+      music,
+      sports
     });
 
 
     const savedUser = await newUser.save();
 
-    res.status(201).json({
+    res.status(200).json({
 success:true,
 message:`${name} registered successfully`,
 user:savedUser
@@ -140,6 +146,47 @@ export const deleteUserById = async (req, res) => {
 
 
 
+export const verifyOTP = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if ( !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "phone number and  OTP are required",
+      });
+    }
+
+    const user = await User.findOne({ phone });
+    if (!user||user.otp!==otp ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
+
+    user.otp = null;
+    await user.save();
+
+    const { password, ...userData } = user.toObject();
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: userData,
+      token,
+    });
+  } catch (error) {
+    console.error("Error during OTP verification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const userLogin = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -147,7 +194,7 @@ export const userLogin = async (req, res) => {
     if (!phone) {
       return res.status(400).json({
         success: false,
-        message: "phone number is required",
+        message: "Phone number is required",
       });
     }
 
@@ -159,17 +206,12 @@ export const userLogin = async (req, res) => {
       });
     }
 
-    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "8d",
-    });
-
-    const { password, ...userData } = user.toObject();
-
+    const otp = generateCode(5);
+    user.otp = (otp);
+    await user.save();
     return res.status(200).json({
       success: true,
-      message: "Login successful",
-      user: userData,
-      token,
+      message: `Your otp is ${otp}`,
     });
   } catch (error) {
     console.error("Error during user login:", error);
@@ -241,3 +283,14 @@ export const getProfileImage = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+function generateCode(length) {
+  let otp = '';
+  let characters = '123456789'
+  if(length===5) {
+  }
+  for (let i = 0; i < length; i++) {
+    otp += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return otp;
+}
