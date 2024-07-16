@@ -6,7 +6,8 @@ import helmet from "helmet";
 import cors from "cors";
 // import adminRoute from "./src/routes/adminRoute.js";
 import userRoute from "./src/routes/userRoute.js";
-import interestRoute from './src/routes/interestRoute.js'
+import interestRoute from './src/routes/interestRoute.js';
+import friendsRoute from './src/routes/friendsRoute.js'
 const app = express();
 app.use(express.json());
 
@@ -20,6 +21,7 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
 app.use("/api/v1/user", userRoute);
 app.use('/api/v1/interest',interestRoute);
+app.use('/api/v1/friends',friendsRoute);
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, (err) => {

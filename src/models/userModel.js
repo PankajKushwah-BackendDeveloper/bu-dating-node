@@ -38,9 +38,25 @@ const userSchema = mongoose.Schema(
         required: true,
       }
     },
+    friends: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    fun: [{
+      type: String,
+    }],
+    music: [{
+      type: String,
+    }],
+    sports: [{
+      type: String,
+    }],
     age: Number,
     gender: String,
-    dob: Date
+    dob: Date,
+    otp: {
+      type: Number,
+    }
   },
   { timestamps: true }
 );

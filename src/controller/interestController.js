@@ -1,6 +1,9 @@
-import Interest from "../models/interestModel.js";
+import Interest from '../models/interestModel.js';
 
-
+const formatString = (str) => {
+    if (typeof str !== 'string') return str;
+    return str.trim().toLowerCase(); // Adjusted to lowercase here
+};
 
 export const addInterest = async (req, res) => {
     try {
@@ -16,28 +19,37 @@ export const addInterest = async (req, res) => {
         const updates = {};
 
         if (fun && fun.length > 0) {
-            updates.Fun = { $each: fun.map(formatString) };
+            updates.Fun = fun.map(item => ({ name: formatString(item) }));
         }
 
         if (music && music.length > 0) {
-            updates.Music = { $each: music.map(formatString) };
+            updates.Music = music.map(item => ({ name: formatString(item) }));
         }
 
         if (sports && sports.length > 0) {
-            updates.Sports = { $each: sports.map(formatString) };
+            updates.Sports = sports.map(item => ({ name: formatString(item) }));
         }
 
         const updatedInterest = await Interest.findOneAndUpdate(
-            {},
-            { $addToSet: updates },
-            { new: true, upsert: true }
+            {}, // Find any document (since there's only one document based on your schema design)
+            { $addToSet: updates }, // Add to arrays without duplicates
+            { new: true, upsert: true, projection: { _id: 0, __v: 0 } } // Exclude _id and __v fields from the returned document
         );
+
+        if (!updatedInterest) {
+            return res.status(404).send({
+                success: false,
+                message: 'No interest found or created'
+            });
+        }
 
         res.status(200).send({
             success: true,
-            data: updatedInterest
+            data: updatedInterest,
+            message: 'Interests added successfully'
         });
     } catch (error) {
+        console.error('Error adding interest:', error);
         res.status(500).send({
             success: false,
             message: 'An error occurred while adding interest',
@@ -46,27 +58,6 @@ export const addInterest = async (req, res) => {
     }
 };
 
-const formatString = (str) => {
-    if (typeof str !== 'string') return str;
-    str = str.trim();
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
 export const getInterests = async(req,res)=>{
-    try {
-        const interests = await Interest.findOne().select('-__v -createdAt -updatedAt ');
-
-        return res.status(200).send({
-            success:true,
-            message:'Interests are fetched',
-            interests
-        })
-    } catch (error) {
-    console.log('error: ', error);
-        return res.status(500).send({
-            success:false,
-            message:'Internal server error',
-            error:error.message
-        })
-    }
+    
 }
