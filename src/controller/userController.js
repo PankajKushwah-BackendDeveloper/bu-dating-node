@@ -25,7 +25,7 @@ export const userSignUp = async (req, res) => {
     if(!req.file) return res.status(400).json({
       message:'please provide profile image'
     })
-    const requiredFields = ["name", "email", "phone", "country",'motive','gender','dob','age'];
+    const requiredFields = ["name",  "phone", "country",'motive','gender','dob','age'];
 
     for (const field of requiredFields) {
       if (!req.body[field]) {
