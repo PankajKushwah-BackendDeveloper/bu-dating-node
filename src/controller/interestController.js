@@ -11,7 +11,7 @@ export const addInterest = async (req, res) => {
         const { fun, music, sports } = req.body;
 
         if ((!fun || fun.length === 0) && (!music || music.length === 0) && (!sports || sports.length === 0)) {
-            return res.status(400).send({
+            return res.status(200).send({
                 success: false,
                 message: 'Please provide at least one of the fields'
             });
@@ -41,7 +41,7 @@ export const addInterest = async (req, res) => {
             (updates.Fun && updates.Fun.length === 0) && 
             (updates.Music && updates.Music.length === 0) && 
             (updates.Sports && updates.Sports.length === 0)) {
-            return res.status(400).send({
+            return res.status(200).send({
                 success: false,
                 message: 'All provided interests are already in the database'
             });
@@ -54,7 +54,7 @@ export const addInterest = async (req, res) => {
         );
 
         if (!updatedInterest) {
-            return res.status(404).send({
+            return res.status(200).send({
                 success: false,
                 message: 'No interest found or created'
             });
@@ -80,7 +80,7 @@ export const getInterests = async(req,res)=>{
         const interests = await interestModel.find();
 
         return res.status(200).send({
-            success:false,
+            success:true,
             message:'Interest fetched',
             interests
         })
@@ -92,3 +92,60 @@ export const getInterests = async(req,res)=>{
         });
     }
 }
+
+
+export const updateInterest = async (req, res) => {
+    try {
+        const { interestId } = req.params;
+        const { category, newName } = req.body;
+
+        const interest = await Interest.findOne();
+
+        if (!interest) {
+            return res.status(200).json({ success: false, message: "Interest document not found" });
+        }
+
+        const interestItem = interest[category].id(interestId);
+
+        if (!interestItem) {
+            return res.status(200).json({ success: false, message: "Specific interest not found" });
+        }
+
+        interestItem.name = newName;
+
+        await interest.save();
+
+        res.status(200).json({ success: true, message: "Interest updated successfully", updatedInterest: interestItem });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error updating interest", error: error.message });
+    }
+};
+
+
+
+export const deleteInterest = async (req, res) => {
+    try {
+        const { interestId } = req.params;
+        const { category } = req.body;
+
+        const interest = await Interest.findOne();
+
+        if (!interest) {
+            return res.status(200).json({ success: false, message: "Interest document not found" });
+        }
+
+        const updatedCategory = interest[category].filter(item => item._id.toString() !== interestId);
+
+        if (interest[category].length === updatedCategory.length) {
+            return res.status(200).json({ success: false, message: "Specific interest not found" });
+        }
+
+        interest[category] = updatedCategory;
+
+        await interest.save();
+
+        res.status(200).json({ success: true, message: "Interest deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error deleting interest", error: error.message });
+    }
+};

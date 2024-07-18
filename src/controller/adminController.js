@@ -14,13 +14,13 @@ export const adminSignUp = async (req, res) => {
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res
-          .status(400)
+          .status(200)
           .json({ success: false, message: `${field} is required` });
       }
     }
 
     if (!validator.isEmail(email)) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: "Please provide a valid email",
       });
@@ -29,7 +29,7 @@ export const adminSignUp = async (req, res) => {
     const existingadmin = await Admin.findOne({ email: email });
 
     if (existingadmin)
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: "email is already registered",
       });
@@ -142,7 +142,7 @@ export const getAdmin = async (req, res) => {
     const admin = await Admin.findById(adminId).select({ password: 0 });
 
     if (!admin) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: "admin does not exist",
       });
@@ -167,7 +167,7 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
     if (!email)
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "Please provide valid email",
       });
@@ -175,7 +175,7 @@ const forgotPassword = async (req, res) => {
     const admin = await Admin.findOne({ email: email });
 
     if (!admin)
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: `No admin found with ${email} email`,
       });
@@ -207,18 +207,18 @@ const resetPassword = async (req, res) => {
     const { otpCode, newPassword } = req.body;
 
     if (!otpCode)
-      return res.status(400).send({
+      return res.status(200).send({
         message: "please enter otp ",
       });
     if (!newPassword)
-      return res.status(400).send({
+      return res.status(200).send({
         message: "please provide new password ",
       });
 
     const admin = await Admin.findOne({ otpCode: otpCode });
 
     if (!admin)
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: "Invalid otp ",
       });

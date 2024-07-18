@@ -47,7 +47,6 @@ const userSchema = mongoose.Schema(
     sports: [{
       type: String,
     }],
-    age: Number,
     gender: String,
     dob: Date,
     otp: {
