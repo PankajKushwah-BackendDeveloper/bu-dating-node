@@ -14,7 +14,7 @@ export const userSignUp = async (req, res) => {
       phone,
       country,
       motive,
-      age,
+     
       gender,
       dob,
       fun,
@@ -22,15 +22,15 @@ export const userSignUp = async (req, res) => {
       sports
     } = req.body;
 
-    if(!req.file) return res.status(400).json({
+    if(!req.file) return res.status(200).json({
       message:'please provide profile image'
     })
-    const requiredFields = ["name",  "phone", "country",'motive','gender','dob','age'];
+    const requiredFields = ["name",  "phone", "country",'motive','gender','dob'];
 
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res
-          .status(400)
+          .status(200)
           .json({ success: false, message: `${field} is required` });
       }
     }
@@ -55,7 +55,7 @@ export const userSignUp = async (req, res) => {
         filename:req.file.filename,
         path:req.file.path
       },
-      age,
+      
       gender,
       dob,
       fun,
@@ -147,7 +147,7 @@ export const verifyOTP = async (req, res) => {
     const { phone, otp } = req.body;
 
     if ( !otp) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "phone number and  OTP are required",
       });
@@ -155,7 +155,7 @@ export const verifyOTP = async (req, res) => {
 
     const user = await User.findOne({ phone });
     if (!user||user.otp!==otp ) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "Invalid OTP",
       });
@@ -188,7 +188,7 @@ export const userLogin = async (req, res) => {
     const { phone } = req.body;
 
     if (!phone) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "Phone number is required",
       });
@@ -244,6 +244,7 @@ export const getAllUsers = async(req,res)=>{
     const users = await User.find().select('-__v -createdAt -updatedAt');
 
     return res.status(200).send({
+      success:true,
       message:"All users are fetched",
       users
     })
@@ -260,7 +261,7 @@ export const getProfileImage = async (req, res) => {
     const { fileName } = req.params;
 
     if (!fileName) {
-      return res.status(400).send("File name is required");
+      return res.status(200).send("File name is required");
     }
 
     const directoryPath = path.join(__dirname, "../../public/userProfile");

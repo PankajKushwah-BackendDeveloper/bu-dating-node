@@ -6,7 +6,7 @@ export const addFriends = async (req, res) => {
     console.log('friendId: ', friendId);
 
     if ( !friendId) {
-        return res.status(400).json({success:false, message: "please provide friend's id" });
+        return res.status(200).json({success:false, message: "please provide friend's id" });
       }
     const user = await User.findById(req.user?._id);
     const friend = await User.findById(friendId);
@@ -16,7 +16,7 @@ export const addFriends = async (req, res) => {
 
     if (user.friends.includes(friendId)) {
     console.log('user.friends: ', user.friends);
-      return res.status(400).json({success:false, message: 'Friend already added' });
+      return res.status(200).json({success:false, message: 'Friend already added' });
     }
 
     user.friends.push(friendId);
