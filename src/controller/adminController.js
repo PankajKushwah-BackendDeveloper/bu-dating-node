@@ -90,7 +90,7 @@ export const adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(404).send({
+      return res.status(200).send({
         success: false,
         message: "Invalid email or Password",
       });
@@ -98,7 +98,7 @@ export const adminLogin = async (req, res) => {
 
     const admin = await Admin.findOne({ email });
     if (!admin) {
-      return res.status(404).send({
+      return res.status(200).send({
         success: false,
         message: `admin with ${email} is not found`,
       });
@@ -107,7 +107,7 @@ export const adminLogin = async (req, res) => {
     const match = await comparePassword(password, admin.password);
 
     if (!match) {
-      return res.status(404).send({
+      return res.status(200).send({
         success: false,
         message: "Invalid Password",
       });
@@ -162,87 +162,9 @@ export const getAdmin = async (req, res) => {
   }
 };
 
-const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
 
-    if (!email)
-      return res.status(200).json({
-        success: false,
-        message: "Please provide valid email",
-      });
 
-    const admin = await Admin.findOne({ email: email });
 
-    if (!admin)
-      return res.status(200).json({
-        success: false,
-        message: `No admin found with ${email} email`,
-      });
-
-    const otpCode = generateOtp();
-    // console.log(`Your OTP is: ${otpCode}`)
-    admin.otpCode = otpCode;
-
-    sendOTPEmail(email, otpCode);
-
-    await admin.save();
-
-    return res.status(200).json({
-      success: true,
-      message: `Your OTP is ${otpCode}`,
-      OTP: `${otpCode}`,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-const resetPassword = async (req, res) => {
-  try {
-    const { otpCode, newPassword } = req.body;
-
-    if (!otpCode)
-      return res.status(200).send({
-        message: "please enter otp ",
-      });
-    if (!newPassword)
-      return res.status(200).send({
-        message: "please provide new password ",
-      });
-
-    const admin = await Admin.findOne({ otpCode: otpCode });
-
-    if (!admin)
-      return res.status(200).send({
-        success: false,
-        message: "Invalid otp ",
-      });
-
-    admin.password = await hashPassword(newPassword);
-
-    admin.otpCode = null;
-    await admin.save();
-
-    return res.status(200).send({
-      success: true,
-      message: `${admin.firstName} ${admin.lastName} your password updated successfully `,
-    });
-
-    return;
-  } catch (error) {
-    // console.log(error)
-    res.status(500).send({
-      success: false,
-      message: "Internal server Error",
-      error,
-    });
-  }
-};
 
 function generateOtp() {
   const min = 100000;

@@ -3,19 +3,14 @@ import User from '../models/userModel.js';
 export const addFriends = async (req, res) => {
   try {
     const {  friendId } = req.body;
-    console.log('friendId: ', friendId);
 
     if ( !friendId) {
         return res.status(200).json({success:false, message: "please provide friend's id" });
       }
     const user = await User.findById(req.user?._id);
     const friend = await User.findById(friendId);
-    console.log('friend: ', friend);
-
-    
-
+  
     if (user.friends.includes(friendId)) {
-    console.log('user.friends: ', user.friends);
       return res.status(200).json({success:false, message: 'Friend already added' });
     }
 
@@ -23,7 +18,7 @@ export const addFriends = async (req, res) => {
     await user.save();
 
     res.status(200).json({ success:true,
-        message:`${friend.name} is added to your friend list` });
+        message:`${friend?.name} is added to your friend list` });
   } catch (error) {
     console.log('error: ', error);
     res.status(500).json({success:false, message: 'Internal Server Error' });
@@ -38,7 +33,7 @@ export const getFriendList = async (req, res) => {
 
     const user = await User.findById(req.user._id).populate('friends' ,'name')
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: 'User not found',
         error: 'User not found'
