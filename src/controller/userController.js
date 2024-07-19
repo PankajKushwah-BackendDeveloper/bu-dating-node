@@ -77,21 +77,6 @@ user:savedUser
   }
 };
 
-export const getUsers = async (req, res) => {
-  try {
-    const users = await User.find();
-    res.status(200).json({
-      success:true,
-      message:'user details fetched',
-      users});
-  } catch (err) {
-    console.error('Error fetching users:', err);
-    res.status(500).json({ 
-      success:false,
-      message:'Internal server error',
-      error: 'Server error' });
-  }
-};
 
 export const getUserById = async (req, res) => {
   try {
@@ -247,7 +232,7 @@ export const getUser = async (req, res) => {
 
 export const getAllUsers = async(req,res)=>{
   try {
-    const users = await User.find().select('-__v -createdAt -updatedAt');
+    const users = await User.find().select('-friends -__v -createdAt -updatedAt');
 
     return res.status(200).send({
       success:true,
