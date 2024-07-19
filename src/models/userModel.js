@@ -51,6 +51,7 @@ const userSchema = mongoose.Schema(
     dob: Date,
     otp: {
       type: Number,
+      default:9999
     }
   },
   { timestamps: true }

@@ -14,7 +14,6 @@ export const userSignUp = async (req, res) => {
       phone,
       country,
       motive,
-     
       gender,
       dob,
       fun,
@@ -23,6 +22,7 @@ export const userSignUp = async (req, res) => {
     } = req.body;
 
     if(!req.file) return res.status(200).json({
+      success:false,
       message:'please provide profile image'
     })
     const requiredFields = ["name",  "phone", "country",'motive','gender','dob'];
@@ -80,7 +80,10 @@ user:savedUser
 export const getUsers = async (req, res) => {
   try {
     const users = await User.find();
-    res.status(200).json(users);
+    res.status(200).json({
+      success:true,
+      message:'user details fetched',
+      users});
   } catch (err) {
     console.error('Error fetching users:', err);
     res.status(500).json({ 
@@ -95,7 +98,7 @@ export const getUserById = async (req, res) => {
     const userId = req.params.id;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success:false,
         message:'User not found with this id',
         error: 'User not found' });
@@ -117,9 +120,12 @@ export const updateUserById = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
     if (!updatedUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(200).json({ error: 'User not found' });
     }
-    res.status(200).json(updatedUser);
+    res.status(200).json(
+      {success:true,
+      message:'user updated',
+      updatedUser});
   } catch (err) {
     console.error('Error updating user by ID:', err);
     res.status(500).json({ error: 'Server error' });
@@ -131,9 +137,9 @@ export const deleteUserById = async (req, res) => {
     const userId = req.params.id;
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(200).json({ error: 'User not found' });
     }
-    res.status(200).json({ message: 'User deleted successfully' });
+    res.status(200).json({success:true, message: 'User deleted successfully' });
   } catch (err) {
     console.error('Error deleting user by ID:', err);
     res.status(500).json({ error: 'Server error' });
@@ -163,7 +169,7 @@ export const verifyOTP = async (req, res) => {
 
     const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
 
-    user.otp = null;
+    // user.otp = null;
     await user.save();
 
     const { password, ...userData } = user.toObject();
@@ -196,13 +202,13 @@ export const userLogin = async (req, res) => {
 
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "User not found",
       });
     }
     const otp=9999;
-    user.otp = otp;
+    // user.otp = otp;
     await user.save()
 
 
@@ -273,7 +279,9 @@ export const getProfileImage = async (req, res) => {
     const filePath = path.join(directoryPath, fileName);
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).send("File not found");
+    return res.status(200).send({
+      success:true,
+      message:"File not found"});
     }
 
     res.setHeader("Content-Disposition", "inline; filename=" + fileName);
