@@ -60,10 +60,6 @@ return res.send(user)
   }
 };
 
-
-
-
-
 export const getFriendSuggestion = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -84,3 +80,25 @@ export const getFriendSuggestion = async (req, res) => {
     });
   }
 };
+
+export const exploreFriends = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const users = await User.find({ _id: { $ne: userId } }).select('name  country profileimage');
+
+    res.status(200).json({
+      success: true,
+      message: 'explore new friends',
+      users
+    });
+  } catch (err) {
+    console.error('Error exploring friend :', err);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: 'Server error'
+    });
+  }
+};
+

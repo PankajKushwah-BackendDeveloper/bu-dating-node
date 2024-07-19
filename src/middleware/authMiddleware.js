@@ -6,7 +6,7 @@ export const requireSignIn = async (req, res, next) => {
     const authorizationHeader = req.headers.authorization;
 
     if (!authorizationHeader) {
-      return res.status(401).json({
+      return res.status(200).json({
         success: false,
         message: "Please login first",
       });
@@ -15,7 +15,7 @@ export const requireSignIn = async (req, res, next) => {
     const [bearer, token] = authorizationHeader.split(" ");
 
     if (bearer !== "Bearer" || !token) {
-      return res.status(401).json({
+      return res.status(200).json({
         success: false,
         message: "Unauthorized - Invalid token format",
       });
@@ -34,7 +34,7 @@ export const requireSignIn = async (req, res, next) => {
       errorMessage = "Invalid token";
     }
 
-    res.status(401).json({
+    res.status(200).json({
       success: false,
       message: errorMessage,
     });
@@ -55,7 +55,7 @@ export const isAdmin = async (req, res, next) => {
     }
 
     if (user.role !== "admin") {
-      return res.status(401).json({
+      return res.status(200).json({
         success: false,
         message: "You are not an admin",
       });
