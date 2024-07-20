@@ -1,9 +1,11 @@
 import express from "express";
-import {  requireSignIn } from "../middleware/authMiddleware.js";
+import {  isAdmin, requireSignIn } from "../middleware/authMiddleware.js";
 import {
+  deleteUser,
   getAllUsers,
   getProfileImage,
   getUser,
+  updateUserDetails,
   userLogin,
   userSignUp,
   verifyOTP,
@@ -17,12 +19,15 @@ const upload = multer({storage})
 
 
 
-router.post("/auth/sign-up",upload.single('image'),  userSignUp);
+router.post("/auth/sign-up",upload.single('profileimage'),  userSignUp);
 router.post("/auth/login", userLogin);
 router.post('/auth/verify-otp',verifyOTP)
-router.get("/", requireSignIn, getUser);
 router.get('/get-image/:fileName',getProfileImage)
 router.get('/all',requireSignIn,getAllUsers)
+router.put('/update-profile/:userId',upload.single('profileimage'), updateUserDetails);
+router.delete('/delete-profile/:userId',requireSignIn,deleteUser)
 
+
+router.get("/", requireSignIn, getUser);
 
 export default router;

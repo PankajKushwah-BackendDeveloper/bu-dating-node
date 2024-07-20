@@ -1,10 +1,14 @@
 import User from "../models/userModel.js";
 import JWT from "jsonwebtoken";
 import path from 'path'
+import mongoose from "mongoose";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { resourceUsage } from "process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
 
 export const userSignUp = async (req, res) => {
   try {
@@ -63,7 +67,8 @@ export const userSignUp = async (req, res) => {
       sports
     });
 
-
+    const age = calculateAge(dob);
+newUser.age = age;
     const savedUser = await newUser.save();
 
     res.status(200).json({
@@ -97,40 +102,6 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
-
-export const updateUserById = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const updateData = req.body;
-
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-    if (!updatedUser) {
-      return res.status(200).json({ error: 'User not found' });
-    }
-    res.status(200).json(
-      {success:true,
-      message:'user updated',
-      updatedUser});
-  } catch (err) {
-    console.error('Error updating user by ID:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const deleteUserById = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser) {
-      return res.status(200).json({ error: 'User not found' });
-    }
-    res.status(200).json({success:true, message: 'User deleted successfully' });
-  } catch (err) {
-    console.error('Error deleting user by ID:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
 
 
 export const verifyOTP = async (req, res) => {
@@ -276,3 +247,120 @@ export const getProfileImage = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+const calculateAge = (dob) => {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+
+export const updateUserDetails = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if(!userId || !mongoose.Types.ObjectId.isValid(userId)) return res.status(200).send({
+      success:false,
+      message:'please provide valid id'
+    })
+    
+
+    const {
+      name,
+      email,
+      country,
+      motive,
+      gender,
+      dob,
+      fun,
+      music,
+      sports,
+    } = req.body;
+console.log(req.body)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    let age;
+    if (dob) {
+     age = calculateAge(dob);
+    }
+    let profileimage;
+    if(req.file){
+       profileimage = `${req.protocol}://${req.get(
+        "host"
+      )}/api/v1/user/get-image/${req.file.filename}`;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          name: name || user.name,
+          email: email || user.email,
+          country: country || user.country,
+          motive: motive || user.motive,
+          gender: gender || user.gender,
+          dob: dob || user.dob,
+          age: age !== undefined ? age : user.age,
+          profileimage: profileimage !== undefined ? profileimage : user.profileimage,
+          fun: fun || user.fun,
+          music: music || user.music,
+          sports: sports || user.sports,
+        }
+      },
+      { new: true } 
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'User details updated successfully',
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error('Error updating user details:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+};
+
+export const deleteUser = async(req,res)=>{
+  try {
+    const {userId} = req.params;
+
+    if(!userId||!mongoose.Types.ObjectId.isValid(userId)) return res.status(200).send({
+      success:false,
+      message:'please provide valid user id'
+    })
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if(!deletedUser) return res.status(200).send({
+      success:false,
+      message:'User not found with this id'
+    })
+
+    return res.status(200).send({
+      success:true,
+      message:`${deletedUser.name} is deleted` 
+    })
+  } catch (error) {
+    return res.status(500).send({
+      success:false,
+      message:'Internal server error',
+      error:error.message
+    })
+  }
+}

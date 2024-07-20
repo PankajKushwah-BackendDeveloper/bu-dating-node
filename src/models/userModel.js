@@ -52,6 +52,9 @@ const userSchema = mongoose.Schema(
     otp: {
       type: String,
       default:"9999"
+    },
+    age:{
+      type:String,
     }
   },
   { timestamps: true }
