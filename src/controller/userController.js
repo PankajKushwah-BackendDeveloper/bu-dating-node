@@ -85,7 +85,12 @@ user:savedUser
 
 export const getUserById = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const {userId} = req.params;
+
+    if(!userId || !mongoose.Types.ObjectId.isValid(userId)) return res.status(200).send({
+      success:false,
+      message:'please provide user id'
+    })
     const user = await User.findById(userId);
     if (!user) {
       return res.status(200).json({
