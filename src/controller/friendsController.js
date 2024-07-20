@@ -29,20 +29,23 @@ export const addFriends = async (req, res) => {
 
 export const getFriendList = async (req, res) => {
   try {
-    
+    const user = await User.findById(req.user._id).populate({
+      path: 'friends',
+      select: 'name profileimage country'
+    });
 
-    const user = await User.findById(req.user._id).populate('friends' ,'name')
     if (!user) {
-      return res.status(200).json({
+      return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: 'User not found'
+        message: 'User not found'
       });
     }
-return res.send(user)
+
     const friendList = user.friends.map(friend => ({
       id: friend._id,
-      name: friend.name
+      name: friend.name,
+      profileimage: friend.profileimage,
+      country: friend.country
     }));
 
     return res.status(200).json({
@@ -55,10 +58,11 @@ return res.send(user)
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: 'Server error'
+      error: err.message
     });
   }
 };
+
 
 export const getFriendSuggestion = async (req, res) => {
   try {
@@ -69,7 +73,7 @@ export const getFriendSuggestion = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Friend suggestions fetched successfully',
-      users
+      friendSuggestion:users
     });
   } catch (err) {
     console.error('Error fetching friend suggestions:', err);
@@ -90,7 +94,7 @@ export const exploreFriends = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'explore new friends',
-      users
+      explore:users
     });
   } catch (err) {
     console.error('Error exploring friend :', err);
