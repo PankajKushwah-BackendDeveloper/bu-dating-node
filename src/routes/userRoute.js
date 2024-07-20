@@ -5,6 +5,7 @@ import {
   getAllUsers,
   getProfileImage,
   getUser,
+  getUserById,
   updateUserDetails,
   userLogin,
   userSignUp,
@@ -26,7 +27,7 @@ router.get('/get-image/:fileName',getProfileImage)
 router.get('/all',requireSignIn,getAllUsers)
 router.put('/update-profile/:userId',upload.single('profileimage'), updateUserDetails);
 router.delete('/delete-profile/:userId',requireSignIn,deleteUser)
-
+router.get('/getby-id/:userId',getUserById);
 
 router.get("/", requireSignIn, getUser);
 
