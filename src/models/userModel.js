@@ -50,8 +50,8 @@ const userSchema = mongoose.Schema(
     gender: String,
     dob: Date,
     otp: {
-      type: Number,
-      default:9999
+      type: String,
+      default:"9999"
     }
   },
   { timestamps: true }
