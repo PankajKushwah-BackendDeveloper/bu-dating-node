@@ -66,14 +66,17 @@ export const userSignUp = async (req, res) => {
       music,
       sports
     });
-
     const age = calculateAge(dob);
 newUser.age = age;
     const savedUser = await newUser.save();
+    const user = savedUser;
+
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
 
     res.status(200).json({
 success:true,
 message:`${name} registered successfully`,
+token,
 user:savedUser
     });
   } catch (err) {
