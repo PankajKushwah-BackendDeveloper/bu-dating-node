@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+const friendSchema = new mongoose.Schema({
+  friendId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  isAccepted: {
+    type: Boolean,
+    default: false
+  }
+});
 const userSchema = mongoose.Schema(
   {
     name: {
@@ -34,10 +44,9 @@ const userSchema = mongoose.Schema(
         required: true,
       }
     },
-    friends: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }],
+    friends: [
+      friendSchema
+  ],
     fun: [{
       type: String,
     }],
@@ -59,5 +68,7 @@ const userSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
 
 export default mongoose.model("User", userSchema);

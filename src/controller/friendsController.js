@@ -1,27 +1,31 @@
 import User from '../models/userModel.js';
-
 export const addFriends = async (req, res) => {
   try {
-    const {  friendId } = req.body;
+    const { friendId } = req.body;
 
-    if ( !friendId) {
-        return res.status(200).json({success:false, message: "please provide friend's id" });
-      }
-    const user = await User.findById(req.user?._id);
-    const friend = await User.findById(friendId);
-  
-    if (user.friends.includes(friendId)) {
-      return res.status(200).json({success:false, message: 'Friend already added' });
+    if (!friendId) {
+      return res.status(200).json({ success: false, message: "Please provide friend's id" });
     }
 
-    user.friends.push(friendId);
+    const user = await User.findById(req.user?._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const isFriendAlreadyAdded = user.friends.some(friend => friend.friendId?.toString() === friendId);
+
+    if (isFriendAlreadyAdded) {
+      return res.status(200).json({ success: false, message: 'Friend already added' });
+    }
+
+    user.friends.push({ friendId: friendId, isAccepted: false });
     await user.save();
 
-    res.status(200).json({ success:true,
-        message:`${friend?.name} is added to your friend list` });
+    res.status(200).json({ success: true, message: 'Friend request sent' });
   } catch (error) {
-    console.log('error: ', error);
-    res.status(500).json({success:false, message: 'Internal Server Error' });
+    console.error('error: ', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
