@@ -29,13 +29,11 @@ export const addFriends = async (req, res) => {
   }
 };
 
-
-
 export const getFriendList = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate({
-      path: 'friends',
-      select: 'name profileimage country'
+      path: 'friends.friendId', 
+      select: 'name profileimage country' 
     });
 
     if (!user) {
@@ -46,16 +44,17 @@ export const getFriendList = async (req, res) => {
     }
 
     const friendList = user.friends.map(friend => ({
-      id: friend._id,
-      name: friend.name,
-      profileimage: friend.profileimage,
-      country: friend.country
+    
+      _id: friend.friendId?._id,
+      name: friend.friendId?.name,
+      country: friend.friendId?.country,
+      profileimage: friend.friendId?.profileimage
     }));
 
     return res.status(200).json({
       success: true,
       message: 'Friend list fetched successfully',
-      friends: friendList
+      friendlist: friendList
     });
   } catch (err) {
     console.error('Error fetching friend list:', err);
@@ -66,6 +65,7 @@ export const getFriendList = async (req, res) => {
     });
   }
 };
+
 
 
 export const getFriendSuggestion = async (req, res) => {
