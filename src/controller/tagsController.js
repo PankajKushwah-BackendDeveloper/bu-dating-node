@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Tags from "../models/tagsModel.js";
 
 
@@ -57,6 +58,74 @@ export const getAllTags = async (req, res) => {
     }
 }
 
+export const updateTag = async (req, res) => {
+    try {
+        const { tagId } = req.params;
+        const { tag } = req.body;
+
+        if (!tagId || !mongoose.Types.ObjectId.isValid(tagId)) {
+            return res.status(400).send({
+                success: false,
+                message: 'Please provide a valid tag id'
+            });
+        }
+
+        const updatedTag = await Tags.findByIdAndUpdate(
+            tagId,
+            { $set: {  tag } },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedTag) {
+            return res.status(404).send({
+                success: false,
+                message: 'Tag not found'
+            });
+        }
+
+        res.status(200).send({
+            success: true,
+            message: 'Tag updated successfully',
+            tag: updatedTag
+        });
+
+    } catch (error) {
+        console.error('Error updating tag:', error);
+        res.status(500).send({
+            success: false,
+            message: 'An error occurred while updating the tag',
+            error: error.message
+        });
+    }
+};
+
+export const deleteTag = async(req,res)=>{
+    try {
+        const {tagId} = req.params;
+        if(!tagId|| !mongoose.Types.ObjectId.isValid(tagId)) return res.status(200).send({
+            success:false,
+            message:'please provide valid id'
+        })
+
+        const tag = await Tags.findByIdAndDelete(tagId);
+
+    if(!tag) return res.status(200).send({
+        success:false,
+        message:'No tag found with this id'
+    })
+
+    return res.status(200).send({
+        success:true,
+        message:`${tag.tag}  tag is deleted`
+    })
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'An error occurred while updating the tag',
+            error: error.message
+        });
+    }
+}
 
 export const addFollwer = async(req,res)=>{
     try {
