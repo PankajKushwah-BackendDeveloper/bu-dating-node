@@ -9,8 +9,8 @@ export const sendFriendRequest = async (req, res) => {
     }
 
     const user = await User.findById(req.user?._id);
+    console.log('req.user: ', req.user);
     
-
     if (!user) {
       return res.status(200).json({ success: false, message: "User not found" });
     }
@@ -27,10 +27,10 @@ export const sendFriendRequest = async (req, res) => {
       return res.status(200).json({ success: false, message: 'Friend request already has been sent' });
     }
 
-    user.friendRequest.push(req.user._id);
+    friend.friendRequest.push(req.user._id);
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Friend request sent' });
+    res.status(200).json({ success: true, message: 'Friend request sent',friendRequests:friend.friendRequest });
   } catch (error) {
     console.error('error: ', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -105,6 +105,7 @@ export const acceptFriendRequest = async (req, res) => {
     console.log('user.friendRequest: ', user.friendRequest);
 
     friend.friends.push(user._id);
+
     await user.save();  
     await friend.save();  
 
@@ -127,10 +128,11 @@ export const acceptFriendRequest = async (req, res) => {
 export const getFriendList = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate({
-      path: 'friends.friendId', 
+      path: 'friends', 
       select: 'name profileimage country' 
     });
 
+    console.log('user: ', user);
     if (!user) {
       return res.status(200).json({
         success: false,
@@ -138,18 +140,12 @@ export const getFriendList = async (req, res) => {
       });
     }
 
-    const friendList = user.friends.map(friend => ({
     
-      _id: friend.friendId?._id,
-      name: friend.friendId?.name,
-      country: friend.friendId?.country,
-      profileimage: friend.friendId?.profileimage
-    }));
 
     return res.status(200).json({
       success: true,
       message: 'Friend list fetched successfully',
-      friendlist: friendList
+      friendlist: user.friends
     });
   } catch (err) {
     console.error('Error fetching friend list:', err);
