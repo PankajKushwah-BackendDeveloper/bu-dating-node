@@ -47,7 +47,7 @@ export const userSignUp = async (req, res) => {
       existingUser.fun = fun;
       existingUser.music = music;
       existingUser.sports = sports;
-      existingUser.profileImage = `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`;
+      existingUser.profileimage = `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`;
       
       await existingUser.save();
 
@@ -72,7 +72,7 @@ export const userSignUp = async (req, res) => {
       fun,
       music,
       sports,
-      profileImage: `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`
+      profileimage: `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`
     });
 
     await newUser.save();
