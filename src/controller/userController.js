@@ -10,11 +10,11 @@ const __dirname = path.dirname(__filename);
 
 
 
+
 export const userSignUp = async (req, res) => {
   try {
     const {
       name,
-      email,
       phone,
       country,
       motive,
@@ -25,65 +25,73 @@ export const userSignUp = async (req, res) => {
       sports
     } = req.body;
 
-    if(!req.file) return res.status(200).json({
-      success:false,
-      message:'please provide profile image'
-    })
-    const requiredFields = ["name",  "phone", "country",'motive','gender','dob'];
-
+    const requiredFields = ["name", "phone", "country", "motive", "gender", "dob"];
     for (const field of requiredFields) {
       if (!req.body[field]) {
-        return res
-          .status(200)
-          .json({ success: false, message: `${field} is required` });
+        return res.status(400).json({ success: false, message: `${field} is required` });
       }
     }
-    
-    let existingUser= await User.findOne({phone});
-    if(existingUser) return res.status(200).json({
-      success:false,
-      message:`A user is already registered with '${phone}'`
-    })
 
-    const profileimage = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/user/get-image/${req.file.filename}`;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please provide profile image' });
+    }
+
+    let existingUser = await User.findOne({ phone });
+
+    if (existingUser) {
+      existingUser.name = name;
+      existingUser.country = country;
+      existingUser.motive = motive;
+      existingUser.gender = gender;
+      existingUser.dob = dob;
+      existingUser.fun = fun;
+      existingUser.music = music;
+      existingUser.sports = sports;
+      existingUser.profileImage = `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`;
+      
+      await existingUser.save();
+
+      const token = JWT.sign({ _id: existingUser._id }, process.env.JWT_SECRET_KEY);
+
+      return res.status(200).json({
+        success: true,
+        message: `${name} registered successfully`,
+        token,
+        user: existingUser
+      });
+    }
+
+    // Create a new user if it doesn't exist
     const newUser = new User({
       name,
-      email,
       phone,
       country,
       motive,
-      profileimage,
-      image:{
-        filename:req.file.filename,
-        path:req.file.path
-      },
-      
       gender,
       dob,
       fun,
       music,
-      sports
+      sports,
+      profileImage: `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`
     });
-    const age = calculateAge(dob);
-newUser.age = age;
-    const savedUser = await newUser.save();
-    const user = savedUser;
 
-    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
+    await newUser.save();
 
-    res.status(200).json({
-success:true,
-message:`${name} registered successfully`,
-token,
-user:savedUser
+    const token = JWT.sign({ _id: newUser._id }, process.env.JWT_SECRET_KEY);
+
+    res.status(201).json({
+      success: true,
+      message: `${name} registered successfully`,
+      token,
+      user: newUser
     });
+
   } catch (err) {
     console.error('Error creating user:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
+
 
 
 export const getUserById = async (req, res) => {
@@ -123,7 +131,8 @@ export const verifyOTP = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone })?.select('-image -__v');
+    
     if (!user||user.otp!=otp ) {
       return res.status(200).json({
         success: false,
@@ -141,7 +150,7 @@ export const verifyOTP = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user: userData,
+      user: userData.name?userData:{},
       token,
     });
   } catch (error) {
@@ -164,14 +173,15 @@ export const userLogin = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(200).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    let user = await User.findOne({ phone });
     const otp=9999;
+    if (!user) {
+      user = new User({
+        phone,
+        otp
+      })
+    }
+ 
     // user.otp = otp;
     await user.save()
 
@@ -280,7 +290,6 @@ export const updateUserDetails = async (req, res) => {
 
     const {
       name,
-      email,
       country,
       motive,
       gender,
@@ -314,7 +323,6 @@ console.log(req.body)
       {
         $set: {
           name: name || user.name,
-          email: email || user.email,
           country: country || user.country,
           motive: motive || user.motive,
           gender: gender || user.gender,
