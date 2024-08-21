@@ -6,10 +6,14 @@ const userSchema = mongoose.Schema(
     name: {
       type: String,
     },
-   
+   password:String,
     phone: {
       type: Number,
       unique: true
+    },
+    isVerified:{
+      type:Boolean,
+      default:false,
     },
     country: {
       type: String,

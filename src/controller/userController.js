@@ -3,18 +3,22 @@ import JWT from "jsonwebtoken";
 import path from 'path'
 import mongoose from "mongoose";
 import fs from "fs";
+import bcrypt from 'bcrypt'
 import { fileURLToPath } from "url";
 import { resourceUsage } from "process";
+import { comparePassword, hashPassword } from "../helper/authHelper.js";
+import userModel from "../models/userModel.js";
+import e from "cors";
+import { measureMemory } from "vm";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-
 
 
 export const userSignUp = async (req, res) => {
   try {
     const {
       name,
+      password,
       phone,
       country,
       motive,
@@ -25,65 +29,56 @@ export const userSignUp = async (req, res) => {
       sports
     } = req.body;
 
-    const requiredFields = ["name", "phone", "country", "motive", "gender", "dob"];
+    // List of required fields
+    const requiredFields = ["name", "phone", "country", "motive", "gender", "dob", "password"];
     for (const field of requiredFields) {
       if (!req.body[field]) {
-        return res.status(400).json({ success: false, message: `${field} is required` });
+        return res.json({ success: false, message: `${field} is required` });
       }
     }
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Please provide profile image' });
+      return res.json({ success: false, message: 'Please provide profile image' });
     }
 
+    
     let existingUser = await User.findOne({ phone });
 
-    if (existingUser) {
-      existingUser.name = name;
-      existingUser.country = country;
-      existingUser.motive = motive;
-      existingUser.gender = gender;
-      existingUser.dob = dob;
-      existingUser.fun = fun;
-      existingUser.music = music;
-      existingUser.sports = sports;
-      existingUser.profileimage = `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`;
-      
-      await existingUser.save();
 
-      const token = JWT.sign({ _id: existingUser._id }, process.env.JWT_SECRET_KEY);
-
-      return res.status(200).json({
-        success: true,
-        message: `${name} registered successfully`,
-        token,
-        user: existingUser
+    if (!existingUser||!existingUser.isVerified) {
+    console.log('existingUser.isVerified: ', !existingUser.isVerified);
+    // console.log('existingUser: ', existingUser);
+      return res.json({
+        success: false,
+        message: 'Please verify your mobile number first'
       });
     }
 
-    // Create a new user if it doesn't exist
-    const newUser = new User({
-      name,
-      phone,
-      country,
-      motive,
-      gender,
-      dob,
-      fun,
-      music,
-      sports,
-      profileimage: `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`
+    if(existingUser.name)  return res.json({
+      success: false,
+      message: `A user is already registered with ${phone}`
     });
 
-    await newUser.save();
+    existingUser.name = name;
+    existingUser.password = await hashPassword(password);
+    existingUser.country = country;
+    existingUser.motive = motive;
+    existingUser.gender = gender;
+    existingUser.dob = dob;
+    existingUser.fun = fun;
+    existingUser.music = music;
+    existingUser.sports = sports;
+    existingUser.profileimage = `${req.protocol}://${req.get("host")}/api/v1/user/get-image/${req.file.filename}`;
+    
+    await existingUser.save();
 
-    const token = JWT.sign({ _id: newUser._id }, process.env.JWT_SECRET_KEY);
+    const token = JWT.sign({ _id: existingUser._id }, process.env.JWT_SECRET_KEY);
 
     res.status(201).json({
       success: true,
       message: `${name} registered successfully`,
       token,
-      user: newUser
+      user: existingUser
     });
 
   } catch (err) {
@@ -93,76 +88,7 @@ export const userSignUp = async (req, res) => {
 };
 
 
-
-export const getUserById = async (req, res) => {
-  try {
-    const {userId} = req.params;
-
-    if(!userId || !mongoose.Types.ObjectId.isValid(userId)) return res.status(200).send({
-      success:false,
-      message:'please provide user id'
-    })
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(200).json({
-        success:false,
-        message:'User not found with this id',
-        error: 'User not found' });
-    }
-    res.status(200).json({
-      success:true,
-      message:`details of ${user.name} fetched `,
-      user});
-  } catch (err) {
-    console.error('Error fetching user by ID:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-
-export const verifyOTP = async (req, res) => {
-  try {
-    const { phone, otp } = req.body;
-
-    if ( !otp) {
-      return res.status(200).json({
-        success: false,
-        message: "phone number and  OTP are required",
-      });
-    }
-
-    const user = await User.findOne({ phone })?.select('-image -__v');
-    
-    if (!user||user.otp!=otp ) {
-      return res.status(200).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
-
-    // user.otp = null;
-    await user.save();
-
-    const { password, ...userData } = user.toObject();
-
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user: userData.name?userData:{},
-      token,
-    });
-  } catch (error) {
-    console.error("Error during OTP verification:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-export const userLogin = async (req, res) => {
+export const sendOtp = async (req, res) => {
   try {
     const { phone } = req.body;
 
@@ -197,6 +123,110 @@ export const userLogin = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if ( !otp) {
+      return res.status(200).json({
+        success: false,
+        message: "phone number and  OTP are required",
+      });
+    }
+
+    const user = await User.findOne({ phone });
+    
+    if (!user||user.otp!=otp ) {
+      return res.status(200).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+user.isVerified = true;
+    // user.otp = null;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "phone number verified",
+    });
+  } catch (error) {
+    console.error("Error during OTP verification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+export const userLogin = async(req,res)=>{
+  try {
+    const {phone ,password} = req.body;
+    console.log('req.body: ', req.body);
+
+    if(!phone || !password ) return res.send({
+      success:false,
+      message:'Please provide phone number and password both'
+    })
+
+    const user = await userModel.findOne({phone});
+
+    if(!user) return res.send({
+      success:false,
+      message:`No user registered with ${phone}`
+    })
+
+    const match = comparePassword(password,user.password);
+
+    if(!match) return res.send({
+      success:false,
+      message:"Wrong password"
+    })
+
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET_KEY);
+
+    return res.send({
+      success:true,
+      message:`${user.name} is login successfully`,
+      token
+    })
+  } catch (error) {
+   return res.status(500).send(
+   { success:false,
+    message:'Internal server error',
+    error:error.message}
+   ) 
+  }
+}
+
+export const getUserById = async (req, res) => {
+  try {
+    const {userId} = req.params;
+
+    if(!userId || !mongoose.Types.ObjectId.isValid(userId)) return res.status(200).send({
+      success:false,
+      message:'please provide user id'
+    })
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(200).json({
+        success:false,
+        message:'User not found with this id',
+        error: 'User not found' });
+    }
+    res.status(200).json({
+      success:true,
+      message:`details of ${user.name} fetched `,
+      user});
+  } catch (err) {
+    console.error('Error fetching user by ID:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 };
   

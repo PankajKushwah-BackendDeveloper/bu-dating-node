@@ -6,6 +6,7 @@ import {
   getProfileImage,
   getUser,
   getUserById,
+  sendOtp,
   updateUserDetails,
   userLogin,
   userSignUp,
@@ -21,6 +22,7 @@ const upload = multer({storage})
 
 
 router.post("/auth/sign-up",upload.single('profileimage'),  userSignUp);
+router.post('/auth/send-otp',sendOtp);
 router.post("/auth/login", userLogin);
 router.post('/auth/verify-otp',verifyOTP)
 router.get('/get-image/:fileName',getProfileImage)
