@@ -3,13 +3,10 @@ import JWT from "jsonwebtoken";
 import path from 'path'
 import mongoose from "mongoose";
 import fs from "fs";
-import bcrypt from 'bcrypt'
+import {sendOtpUsingTwilio} from '../helper/twilioFunction.js'
 import { fileURLToPath } from "url";
-import { resourceUsage } from "process";
 import { comparePassword, hashPassword } from "../helper/authHelper.js";
 import userModel from "../models/userModel.js";
-import e from "cors";
-import { measureMemory } from "vm";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -90,8 +87,8 @@ export const userSignUp = async (req, res) => {
 
 export const sendOtp = async (req, res) => {
   try {
-    const { phone } = req.body;
-
+    // const { phone } = req.body;
+const phone = "+916261736891"
     if (!phone) {
       return res.status(200).json({
         success: false,
@@ -111,7 +108,7 @@ export const sendOtp = async (req, res) => {
     // user.otp = otp;
     await user.save()
 
-
+await sendOtpUsingTwilio(phone,otp);
     return res.status(200).json({
       success: true,
       message: `your otp is ${otp}`,

@@ -10,12 +10,12 @@ import friendsRoute from './src/routes/friendsRoute.js';
 import tagsRoute from './src/routes/tagsRoute.js';
 import agoraRouter from './src/routes/agoraRouter.js'; // Import the Agora router
 
+
 const app = express();
 app.use(express.json());
 
 env.config();
 connectDB();
-
 app.use(helmet());
 app.use(cors());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
