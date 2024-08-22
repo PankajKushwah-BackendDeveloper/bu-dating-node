@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename);
 export const userSignUp = async (req, res) => {
   try {
 
-    console.log('API called')
     const {
       name,
       password,
@@ -58,8 +57,9 @@ export const userSignUp = async (req, res) => {
       success: false,
       message: `A user is already registered with ${phone}`
     });
+const nameArr = name.trim().split(" ")
 
-    existingUser.name = name;
+    existingUser.username = await generateUsername(nameArr[0]+nameArr[1].substring(0,3));
     existingUser.password = await hashPassword(password);
     existingUser.country = country;
     existingUser.country_code = country_code;
@@ -101,6 +101,7 @@ export const sendOtp = async (req, res) => {
     }
 
     let user = await User.findOne({ phone });
+   
     const otp=9999;
     if (!user) {
       user = new User({
@@ -109,8 +110,11 @@ export const sendOtp = async (req, res) => {
         otp
       })
     }
- 
-    // user.otp = otp;
+    if(user.name)  return res.json({
+      success: false,
+      message: `A user is already registered with ${phone}`
+    });
+    user.otp = otp;
     await user.save()
 
 // await sendOtpUsingTwilio(country_dial_code+phone,otp);
@@ -413,3 +417,25 @@ export const deleteUser = async(req,res)=>{
     })
   }
 }
+
+const generateUsername = async (username) => {
+  const getRandomInt = (max) => Math.floor(Math.random() * max);
+  const getRandomChar = () => {
+    const chars = "1234567890";
+    return chars[getRandomInt(chars.length)];
+  };
+
+ ;
+  for (let i = 0; i < 4; i++) {
+    username += getRandomChar();
+  }
+
+  while (await userModel.findOne({ username })) {
+    username = "";
+    for (let i = 0; i < 4; i++) {
+      username += getRandomChar();
+    }
+  }
+
+  return username;
+};

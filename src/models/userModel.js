@@ -18,6 +18,10 @@ type:String,
       type: Number,
       unique: true
     },
+    username:{
+      type:String,
+      unique:true
+    },
     isVerified:{
       type:Boolean,
       default:false,
