@@ -6,6 +6,13 @@ const userSchema = mongoose.Schema(
     name: {
       type: String,
     },
+    country_code:{
+type:String,
+    },
+    country_dial_code:{
+      type:String,
+      
+    },
    password:String,
     phone: {
       type: Number,

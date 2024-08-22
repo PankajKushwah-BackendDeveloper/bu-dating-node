@@ -13,11 +13,14 @@ const __dirname = path.dirname(__filename);
 
 export const userSignUp = async (req, res) => {
   try {
+
+    console.log('API called')
     const {
       name,
       password,
       phone,
       country,
+      country_code,
       motive,
       gender,
       dob,
@@ -27,7 +30,7 @@ export const userSignUp = async (req, res) => {
     } = req.body;
 
     // List of required fields
-    const requiredFields = ["name", "phone", "country", "motive", "gender", "dob", "password"];
+    const requiredFields = ["name", "phone","country_code", "country", "motive", "gender", "dob", "password"];
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.json({ success: false, message: `${field} is required` });
@@ -43,7 +46,7 @@ export const userSignUp = async (req, res) => {
 
 
     if (!existingUser||!existingUser.isVerified) {
-    console.log('existingUser.isVerified: ', !existingUser.isVerified);
+    console.log('existingUser.isVerified: ', !existingUser?.isVerified);
     // console.log('existingUser: ', existingUser);
       return res.json({
         success: false,
@@ -59,6 +62,7 @@ export const userSignUp = async (req, res) => {
     existingUser.name = name;
     existingUser.password = await hashPassword(password);
     existingUser.country = country;
+    existingUser.country_code = country_code;
     existingUser.motive = motive;
     existingUser.gender = gender;
     existingUser.dob = dob;
@@ -71,7 +75,7 @@ export const userSignUp = async (req, res) => {
 
     const token = JWT.sign({ _id: existingUser._id }, process.env.JWT_SECRET_KEY);
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: `${name} registered successfully`,
       token,
@@ -87,12 +91,12 @@ export const userSignUp = async (req, res) => {
 
 export const sendOtp = async (req, res) => {
   try {
-    // const { phone } = req.body;
-const phone = "+916261736891"
-    if (!phone) {
+    const { phone,country_dial_code } = req.body;
+
+    if (!phone || !country_dial_code) {
       return res.status(200).json({
         success: false,
-        message: "Phone number is required",
+        message: "Phone number and country_dial_code  are required",
       });
     }
 
@@ -101,6 +105,7 @@ const phone = "+916261736891"
     if (!user) {
       user = new User({
         phone,
+        country_dial_code,
         otp
       })
     }
@@ -108,7 +113,7 @@ const phone = "+916261736891"
     // user.otp = otp;
     await user.save()
 
-await sendOtpUsingTwilio(phone,otp);
+// await sendOtpUsingTwilio(country_dial_code+phone,otp);
     return res.status(200).json({
       success: true,
       message: `your otp is ${otp}`,
@@ -191,7 +196,8 @@ export const userLogin = async(req,res)=>{
     return res.send({
       success:true,
       message:`${user.name} is login successfully`,
-      token
+      token,
+      user
     })
   } catch (error) {
    return res.status(500).send(
@@ -328,7 +334,7 @@ export const updateUserDetails = async (req, res) => {
 console.log(req.body)
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: 'User not found',
       });
