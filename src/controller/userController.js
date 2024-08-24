@@ -271,7 +271,33 @@ export const getAllUsers = async(req,res)=>{
   }
 }
 
+export const searchUsers = async(request,response)=>{
+  try {
+      const { searchQuery } = request.body
 
+      const query = new RegExp(searchQuery,"i","g")
+
+      const users = await User.find({
+          "$or" : [
+              { name : query },
+              { username : query }
+          ]
+      })
+      .select('-image -createdAt -updatedAt -__v ');
+
+     
+      return response.json({
+        success : true,
+          message : 'Searched product',
+          users,
+      })
+  } catch (error) {
+      return response.status(500).json({
+          message : error.message || error,
+          error : true
+      })
+  }
+}
 
 export const getProfileImage = async (req, res) => {
   try {
