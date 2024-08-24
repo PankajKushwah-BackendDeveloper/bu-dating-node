@@ -398,7 +398,7 @@ export const getInterestImage = async (req, res) => {
     }
   };
 
-  const capitalizeWords = (str) => {
+export  const capitalizeWords = (str) => {
     return str
         .toLowerCase() 
         .split(' ')     

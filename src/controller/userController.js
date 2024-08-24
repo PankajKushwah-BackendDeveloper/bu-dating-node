@@ -7,6 +7,7 @@ import {sendOtpUsingTwilio} from '../helper/twilioFunction.js'
 import { fileURLToPath } from "url";
 import { comparePassword, hashPassword } from "../helper/authHelper.js";
 import userModel from "../models/userModel.js";
+import { capitalizeWords } from "./interestController.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -60,6 +61,7 @@ export const userSignUp = async (req, res) => {
 const nameArr = name.trim().split(" ")
 
     existingUser.username = await generateUsername(nameArr[0]);
+    existingUser.name = capitalizeWords(name)
     existingUser.password = await hashPassword(password);
     existingUser.country = country;
     existingUser.country_code = country_code;
