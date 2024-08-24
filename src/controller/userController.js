@@ -59,7 +59,7 @@ export const userSignUp = async (req, res) => {
     });
 const nameArr = name.trim().split(" ")
 
-    existingUser.username = await generateUsername(nameArr[0]+nameArr[1].substring(0,3));
+    existingUser.username = await generateUsername(nameArr[0]);
     existingUser.password = await hashPassword(password);
     existingUser.country = country;
     existingUser.country_code = country_code;
